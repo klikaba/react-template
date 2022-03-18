@@ -1,43 +1,34 @@
-const { resolve } = require('path');
+const path = require('path');
 const webpack = require('webpack');
-const dotenv = require('dotenv');
-const HtmlWebPackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 
-const htmlPlugin = new HtmlWebPackPlugin({
-  template: './src/index.html',
-  filename: './index.html',
-});
-const cleanPlugin = new CleanWebpackPlugin(['dist']);
+const cleanPlugin = new CleanWebpackPlugin();
 const hotModuleReplacementPlugin = new webpack.HotModuleReplacementPlugin();
-
-const env = dotenv.config().parsed;
-
-// reduce it to a nice object, the same as before
-const envKeys = Object.keys(env).reduce((prev, next) => {
-  prev[`process.env.${next}`] = JSON.stringify(env[next]);
-  return prev;
-}, {});
-
-const definePlugin = new webpack.DefinePlugin(envKeys);
+const htmlPlugin = new HtmlWebpackPlugin({
+  template: path.join(__dirname, "src", "index.html"),
+  filename: './index.html',
+  environment: process.env.NODE_ENV,
+});
+const dotenvPlugin = new Dotenv({
+  systemvars: true,
+});
 
 module.exports = {
   mode: 'development',
-  entry: [
-    './src/client/index.jsx',
-    // 'webpack-hot-middleware/client?http://localhost:3000&reload=true',
-  ],
   devtool: 'inline-source-map',
+  entry: [path.resolve(__dirname, 'src/client/index.jsx'), 'webpack-hot-middleware/client'],
   resolve: {
     alias: {
-      services: resolve(__dirname, 'src/client/services'),
-      styles: resolve(__dirname, 'src/client/styles'),
+      services: path.resolve(__dirname, 'src/client/services'),
+      styles: path.resolve(__dirname, 'src/client/styles'),
     },
-    extensions: ['.js', '.jsx', '.scss'],
+    extensions: ['.js', '.jsx', '.json', '.scss'],
   },
   output: {
     publicPath: '/',
-    path: resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
   },
   devServer: {
@@ -91,10 +82,9 @@ module.exports = {
     htmlPlugin,
     cleanPlugin,
     hotModuleReplacementPlugin,
-    definePlugin,
+    dotenvPlugin,
   ],
-};
-
+}
 
 // { test: /\.woff(\?v=\d+\.\d+\.\d+)?$/, loader: 'url?limit=10000&mimetype=application/font-woff' },
 // { test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/, loader: 'url?limit=10000&mimetype=application/font-woff' },
